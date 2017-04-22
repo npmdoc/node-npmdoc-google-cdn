@@ -1,0 +1,344 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/passy/google-cdn"
+
+    >google-cdn (v1.1.0)</a>
+</h1>
+<h4>Replaces references to resources on the Google CDN</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.google-cdn">module google-cdn</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.google-cdn.google-cdn">
+            function <span class="apidocSignatureSpan"></span>google-cdn
+            <span class="apidocSignatureSpan">(content, bowerJsonOriginal, options, masterCallback)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">google-cdn.</span>bower</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.google-cdn.bower">module google-cdn.bower</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.google-cdn.bower.joinComponent">
+            function <span class="apidocSignatureSpan">google-cdn.bower.</span>joinComponent
+            <span class="apidocSignatureSpan">(directory, component)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.google-cdn.bower.resolveMainPath">
+            function <span class="apidocSignatureSpan">google-cdn.bower.</span>resolveMainPath
+            <span class="apidocSignatureSpan">(supportedTypes, component, version, callback)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.google-cdn" id="apidoc.module.google-cdn">module google-cdn</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.google-cdn.google-cdn" id="apidoc.element.google-cdn.google-cdn">
+        function <span class="apidocSignatureSpan"></span>google-cdn
+        <span class="apidocSignatureSpan">(content, bowerJsonOriginal, options, masterCallback)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function cdnify(content, bowerJsonOriginal, options, masterCallback) {
+
+  if (!bowerJsonOriginal) {
+    throw new Error(&#x27;Required argument `bowerJson` is missing.&#x27;);
+  }
+  //clone bowerJson so that it can be modified
+  var bowerJson = JSON.parse(JSON.stringify(bowerJsonOriginal));
+
+  if (isFunction(options)) {
+    masterCallback = options;
+    options = {};
+  }
+
+  options = options || {};
+  options.componentsPath = options.componentsPath || &#x27;bower_components&#x27;;
+
+  var cdn = options.cdn || &#x27;google&#x27;;
+  var cdnData = {};
+  if (Array.isArray(cdn)) {
+    cdn.forEach(function(host) {
+      cdnData[host] = data[host];
+    });
+  } else if (typeof(cdn) === &#x27;object&#x27;) {
+    cdnData.custom = cdn;
+  } else {
+    cdnData[cdn] = data[cdn];
+  }
+
+  var supportedTypes = {};
+  supportedTypes.types = getTypesArray(options.types) || [&#x27;js&#x27;, &#x27;css&#x27;];
+  supportedTypes.typesRegex = {};
+  supportedTypes.types.forEach(function (type) {
+    supportedTypes.typesRegex[type] = new RegExp(&#x27;\\.&#x27; + escape(type) + &#x27;$&#x27;, &#x27;i&#x27;);
+  });
+
+  var cdnHostList = Object.keys(cdnData);
+
+  if (!cdnHostList.length) {
+    return masterCallback(new Error(&#x27;CDN &#x27; + cdn + &#x27; is not supported.&#x27;));
+  }
+  for (var i = 0; i &#x3c; cdnHostList.length; i++) {
+    var badCdn = cdnHostList[i];
+    if (!cdnData[badCdn]) {
+      return masterCallback(new Error(&#x27;CDN &#x27; + badCdn + &#x27; is not supported.&#x27;));
+    }
+  }
+
+  function generateReplacement(bowerPath, url) {
+    // Replace leading slashes if present.
+    var from = bowerUtil.joinComponent(options.componentsPath, bowerPath);
+    var fromRe = &#x27;/?&#x27; + requote(from);
+    var fromRegex = new RegExp(fromRe);
+    return {
+      from: from,
+      fromRegex: fromRegex,
+      to: url
+    };
+  }
+
+  function buildReplacement(cdnHost) {
+    return function(name, callback) {
+      var item = cdnData[cdnHost][name];
+      var versionStr = getVersionStr(bowerJson, name);
+
+      if (!versionStr) {
+        return callback();
+      }
+      name = normalizeBowerName(bowerJson, name);
+
+      var version = semver.maxSatisfying(item.versions, versionStr);
+      if (version) {
+        satisfyDependency(bowerJson, name);
+        debug(&#x27;Choosing version %s for dependency %s&#x27;, version, name);
+
+        if (item.all) {
+          var url = (isFunction(item.url)) ? item.url(version) : item.url;
+          callback(null, generateReplacement(name, url));
+        } else {
+          bowerUtil.resolveMainPath(supportedTypes, name, versionStr, function (err, main) {
+            if (err) {
+              return callback(err);
+            } else {
+              var replacements = [];
+              for (var type in main) {
+                var url = getCDNUrl(item, type, version);
+                if (url) {
+                  replacements.push(generateReplacement(main[type], url));
+                }
+              }
+              callback(null, replacements);
+
+            }
+          });
+        }
+      } else {
+        debug(&#x27;Could not find satisfying version for %s %s&#x27;, name, versionStr);
+        callback();
+      }
+    };
+  }
+
+  var replacementInfo = [];
+
+  function buildReplacementForHost(cdnHost, callback) {
+    async.map(Object.keys(cdnData[cdnHost]), buildReplacement(cdnHost), function (err, replacements) {
+      if (err) {
+        return callback(err);
+      }
+
+      function replaceContent(fileReplacement) {
+        if (fileReplacement) {
+          content = content.replace(fileReplacement.fromRegex, fileReplacement.to);
+          debug(&#x27;Replaced %s with %s&#x27;, fileReplacement.fromRegex, fileReplacement.to);
+          replacementInfo.push(fileReplacement);
+        }
+      }
+
+      replacements.forEach(function (replacement) {
+        if (replacement) {
+          if (Array.isArray(replacement)) {
+            replacement.forEach(replaceContent);
+          } else {
+            replaceContent(replacement);
+          }
+        }
+      });
+      callback();
+    });
+  }
+
+  async.eachSeries(cdnHostList, buildReplacementForHost, function(err) {
+    if (err) {
+      return masterCallback(err);
+    }
+
+    masterCallback(null, content, replacementInfo);
+  });
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.google-cdn.bower" id="apidoc.module.google-cdn.bower">module google-cdn.bower</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.google-cdn.bower.joinComponent" id="apidoc.element.google-cdn.bower.joinComponent">
+        function <span class="apidocSignatureSpan">google-cdn.bower.</span>joinComponent
+        <span class="apidocSignatureSpan">(directory, component)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function joinComponent(directory, component) {
+  var dirBits = directory.split(path.sep);
+  // Always join the path with a forward slash, because it&#x27;s used to replace the
+  // path in HTML.
+  return path.join(dirBits.join(&#x27;/&#x27;), component).replace(/\\/g, &#x27;/&#x27;);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+  if (!cdnData[badCdn]) {
+    return masterCallback(new Error(&#x27;CDN &#x27; + badCdn + &#x27; is not supported.&#x27;));
+  }
+}
+
+function generateReplacement(bowerPath, url) {
+  // Replace leading slashes if present.
+  var from = bowerUtil.<span class="apidocCodeKeywordSpan">joinComponent</span>(options.componentsPath, bowerPath);
+  var fromRe = &#x27;/?&#x27; + requote(from);
+  var fromRegex = new RegExp(fromRe);
+  return {
+    from: from,
+    fromRegex: fromRegex,
+    to: url
+  };
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.google-cdn.bower.resolveMainPath" id="apidoc.element.google-cdn.bower.resolveMainPath">
+        function <span class="apidocSignatureSpan">google-cdn.bower.</span>resolveMainPath
+        <span class="apidocSignatureSpan">(supportedTypes, component, version, callback)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function resolveMain(supportedTypes, component, version, callback) {
+  debug(&#x27;resolving main property for component %s#%s&#x27;, component, version);
+  bower.commands.info(component + &#x27;#&#x27; + version, &#x27;main&#x27;).on(&#x27;end&#x27;, function (main) {
+    var mainFiles = findMainFiles(supportedTypes, component, main);
+    for (var type in mainFiles) {
+      mainFiles[type] = bowerUtil.joinComponent(component, mainFiles[type]);
+    }
+    callback(null, mainFiles);
+  }).on(&#x27;error&#x27;, callback);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+satisfyDependency(bowerJson, name);
+debug(&#x27;Choosing version %s for dependency %s&#x27;, version, name);
+
+if (item.all) {
+  var url = (isFunction(item.url)) ? item.url(version) : item.url;
+  callback(null, generateReplacement(name, url));
+} else {
+  bowerUtil.<span class="apidocCodeKeywordSpan">resolveMainPath</span>(supportedTypes, name, versionStr, function (err, main) {
+    if (err) {
+      return callback(err);
+    } else {
+      var replacements = [];
+      for (var type in main) {
+        var url = getCDNUrl(item, type, version);
+        if (url) {
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
