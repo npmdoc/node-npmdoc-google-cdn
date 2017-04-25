@@ -1,6 +1,6 @@
 # npmdoc-google-cdn
 
-#### api documentation for  [google-cdn (v1.1.0)](https://github.com/passy/google-cdn)  [![npm package](https://img.shields.io/npm/v/npmdoc-google-cdn.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-google-cdn) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-google-cdn.svg)](https://travis-ci.org/npmdoc/node-npmdoc-google-cdn)
+#### basic api documentation for  [google-cdn (v1.1.0)](https://github.com/passy/google-cdn)  [![npm package](https://img.shields.io/npm/v/npmdoc-google-cdn.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-google-cdn) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-google-cdn.svg)](https://travis-ci.org/npmdoc/node-npmdoc-google-cdn)
 
 #### Replaces references to resources on the Google CDN
 
